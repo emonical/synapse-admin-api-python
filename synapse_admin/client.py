@@ -161,6 +161,20 @@ class ClientAPI(Admin):
             else:
                 raise SynapseException(data["errcode"], data["error"])
 
+    def update_user_data(self, userid: str, data_path: str, payload: dict):
+        resp = self.connection.request(
+            method="PUT",
+            path=f"{ClientAPI.BASE_PATH}/user/{userid}/account_data/{data_path}",
+            json=payload
+        )
+
+        data = resp.json()
+        if resp.status_code != 200:
+            if self.suppress_exception:
+                return False, data
+            else:
+                raise SynapseException(data["errcode"], data["error"])
+
     def client_leave_room(self, roomid: str) -> bool:
         """leave a room as a client
 
