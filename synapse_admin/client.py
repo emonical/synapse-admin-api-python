@@ -36,6 +36,7 @@ class ClientAPI(Admin):
     """
 
     BASE_PATH = "/_matrix/client/r0"
+    V3_BASE_PATH = "/_matrix/client/v3"
 
     def __init__(
         self,
@@ -129,6 +130,36 @@ class ClientAPI(Admin):
                     return False, data
                 else:
                     raise SynapseException(data["errcode"], data["error"])
+
+    def add_room_to_space(self, server_name, space_room_id, child_roomid, suggested=False):
+        """
+        :param server_name: (str, required) The name of the server to route the child_space_to
+        :param space_room_id: (str, required) The space room alias (see matrix spec for spaces and routing)
+        :param child_roomid: (str, required) The room id to associate with the space
+        :param suggested: (boolean, optional) Rendering hint for clients (eager loading, etc)
+        :return:
+        """
+        event_type = "m.space.child"
+
+        api_url = f"{ClientAPI.V3_BASE_PATH}/rooms"
+
+        content = {
+            "content": {
+                "via": server_name,
+                "suggested": suggested
+            }
+        }
+        resp = self.connection.request(
+            method="PUT",
+            path=f"{api_url}/{space_room_id}/state/{event_type}/{child_roomid}",
+            json=content
+        )
+        data = resp.json()
+        if resp.status_code != 200:
+            if self.suppress_exception:
+                return False, data
+            else:
+                raise SynapseException(data["errcode"], data["error"])
 
     def client_leave_room(self, roomid: str) -> bool:
         """leave a room as a client
