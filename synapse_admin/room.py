@@ -516,6 +516,46 @@ class Room(Admin):
             else:
                 raise SynapseException(data["errcode"], data["error"])
 
+    def send_event(
+            self,
+            roomid: str,
+            event_type: str,
+            state_key: str,
+            payload: dict
+    ) -> dict:
+        """Send an event to a room
+         /_matrix/client/v3/rooms/{roomId}/state/{eventType}/{stateKey}
+        Args:
+            roomid (str): the room where the event exist
+            event_type (str) the type of event to send to the room
+            state_key (str) the state key of the event to send
+            payload (dict) the payload of the matrix event
+
+        Returns:
+            str: the id of the sent event
+        """
+
+        roomid = self.validate_room(roomid)
+        event_path = f"/rooms/{roomid}/state/{event_type}"
+
+        if state_key:
+            event_path = f"{event_path}/{state_key}"
+
+        resp = self.connection.request(
+            "PUT",
+            self.admin_patterns(event_path, 3),
+            json=payload
+        )
+        data = resp.json()
+        if resp.status_code == 200:
+            return data["event_id"]
+        else:
+            if self.suppress_exception:
+                return False, data
+            else:
+                raise SynapseException(data["errcode"], data["error"])
+
+
     def delete_async(
         self,
         roomid: str,
