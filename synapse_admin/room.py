@@ -543,7 +543,7 @@ class Room(Admin):
 
         resp = self.connection.request(
             "PUT",
-            self.admin_patterns(event_path, 3),
+            f"{ClientAPI.V3_BASE_PATH}{event_path}",
             json=payload
         )
         data = resp.json()
